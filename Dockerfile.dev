@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json yarn.lock* ./
+RUN npm install -g corepack && \
+    yarn install --frozen-lockfile && \
+    yarn cache clean && \
+    rm -rf /tmp/* /var/cache/apk/*
+
+COPY tsconfig.json ./
+
+EXPOSE 3000
+
+CMD [ "yarn", "dev" ]

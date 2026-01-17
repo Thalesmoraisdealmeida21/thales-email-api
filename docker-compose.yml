@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app-email-sender:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+      - ./tsconfig.json:/app/tsconfig.json    # Mantém node_modules no container (não sobrescreve)
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - EMAIL_USER=contato@thalesmorais.dev
+      - EMAIL_PASS=Th@les219710
+    restart: unless-stopped
