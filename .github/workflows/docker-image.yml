@@ -1,0 +1,60 @@
+name: Build and Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE_NAME: email-sender-app
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to DigitalOcean Registry
+        run: |
+          echo "${{ secrets.DO_ACCESS_TOKEN }}" | docker login \
+            registry.digitalocean.com \
+            -u oauth2 \
+            --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to Droplet via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            docker login registry.digitalocean.com \
+              -u oauth2 \
+              -p ${{ secrets.DO_ACCESS_TOKEN }}
+
+            docker pull ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            docker stop ${{ env.IMAGE_NAME }} || true
+            docker rm ${{ env.IMAGE_NAME }} || true
+
+            docker run -d \
+              --name ${{ env.IMAGE_NAME }} \
+              -p 3001:3001 \
+              --restart always \
+              -e PORT=${{ secrets.PORT }} \
+              -e EMAIL_USER=${{ secrets.EMAIL_USER }} \
+              -e EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }} \
+              -e SMTP_SERVER=${{ secrets.SMTP_SERVER }} \
+              -e SMTP_PORT=${{ secrets.SMTP_PORT }} \
+              -e SMTP_SECURE=${{ secrets.SMTP_SECURE }} \
+              ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
