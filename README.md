@@ -25,10 +25,10 @@ Enable programmatic email sending (contact forms, notifications, automations) th
 |--------------|----------|--------------------------------------|-------------------|
 | `EMAIL_USER`| Yes      | SMTP server username                 | —                 |
 | `EMAIL_PASS`| Yes      | SMTP server password                 | —                 |
-| `SMTP_HOST` | No       | SMTP server host                     | `smtp.umbler.com` |
-| `SMTP_PORT` | No       | SMTP port                            | `587`             |
-| `SMTP_SECURE`| No      | Use SSL/TLS (`true` or `false`)      | `false`           |
-| `PORT`      | No       | HTTP server port                     | `3000`            |
+| `SMTP_HOST` | Yes       | SMTP server host                     | `smtp.umbler.com` |
+| `SMTP_PORT` | Yes       | SMTP port                            | `587`             |
+| `SMTP_SECURE`| Yes      | Use SSL/TLS (`true` or `false`)      | `false`           |
+| `PORT`      | Yes       | HTTP server port                     | `3000`            |
 
 ### Using `.env-example`
 
