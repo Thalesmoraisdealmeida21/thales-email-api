@@ -28,7 +28,9 @@ Enable programmatic email sending (contact forms, notifications, automations) th
 | `SMTP_HOST` | Yes       | SMTP server host                     | `smtp.umbler.com` |
 | `SMTP_PORT` | Yes       | SMTP port                            | `587`             |
 | `SMTP_SECURE`| Yes      | Use SSL/TLS (`true` or `false`)      | `false`           |
-| `PORT`      | Yes       | HTTP server port                     | `3000`            |
+| `PORT`      | No       | HTTP server port                     | `3000`            |
+| `RATE_LIMIT_MAX` | No   | Max requests per window for `/send-email` | `10`        |
+| `RATE_LIMIT_WINDOW_MS` | No | Rate-limit window in ms           | `60000` (1 min)   |
 
 ### Using `.env-example`
 
@@ -120,8 +122,9 @@ curl -X POST http://localhost:3000/send-email \
 **Responses:**
 
 - **200** – `{ "success": true }` — email sent.
-- **500** – `{ "success": false, "error": "Failed to send email" }` — send failed.
 - **400** — Validation error (Zod) when `to`, `subject`, or `text` are invalid.
+- **429** – `{ "success": false, "error": "Too many requests, please try again later." }` — rate limit exceeded.
+- **500** – `{ "success": false, "error": "Failed to send email" }` — send failed.
 
 ---
 

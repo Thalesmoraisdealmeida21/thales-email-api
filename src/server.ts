@@ -1,13 +1,21 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { sendEmail } from './emailSender.js';
 import { z } from 'zod';
 
 const app = express();
 
-// Middleware para fazer parsing do JSON body
 app.use(express.json());
 
-app.post('/send-email', async (req, res) => {
+const sendEmailLimiter = rateLimit({
+    windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000,
+    limit: Number(process.env.RATE_LIMIT_MAX) || 10,
+    message: { success: false, error: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.post('/send-email', sendEmailLimiter, async (req, res) => {
     const schema = z.object({
         to: z.string(),
         subject: z.string().min(1),
@@ -21,6 +29,8 @@ app.post('/send-email', async (req, res) => {
         res.status(500).send({ success: false, error: 'Failed to send email' });
     }
 });
+
+
 
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, '0.0.0.0', () => {
