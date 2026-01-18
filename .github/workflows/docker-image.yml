@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-      
 
 env:
   IMAGE_NAME: email-sender-app
@@ -33,30 +32,32 @@ jobs:
         run: |
           docker push ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
       - name: Deploy to Droplet via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.DROPLET_SSH_KEY }}
+          key_path: ~/.ssh/deploy_key
+          port: ${{ secrets.DROPLET_SSH_PORT || 22 }}
           script: |
-            docker login registry.digitalocean.com \
-              -u oauth2 \
-              -p ${{ secrets.DO_ACCESS_TOKEN }}
-
+            docker login registry.digitalocean.com -u oauth2 -p ${{ secrets.DO_ACCESS_TOKEN }}
             docker pull ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
             docker stop ${{ env.IMAGE_NAME }} || true
             docker rm ${{ env.IMAGE_NAME }} || true
-
             docker run -d \
               --name ${{ env.IMAGE_NAME }} \
               -p 3001:3001 \
               --restart always \
               -e PORT=${{ secrets.PORT }} \
               -e EMAIL_USER=${{ secrets.EMAIL_USER }} \
-              -e EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }} \
-              -e SMTP_SERVER=${{ secrets.SMTP_SERVER }} \
+              -e EMAIL_PASS=${{ secrets.EMAIL_PASS }} \
+              -e SMTP_HOST=${{ secrets.SMTP_HOST }} \
               -e SMTP_PORT=${{ secrets.SMTP_PORT }} \
               -e SMTP_SECURE=${{ secrets.SMTP_SECURE }} \
               ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
