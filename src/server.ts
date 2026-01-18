@@ -2,9 +2,15 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { sendEmail } from './emailSender.js';
 import { z } from 'zod';
+import cors from 'cors';
 
 const app = express();
 
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 const sendEmailLimiter = rateLimit({
