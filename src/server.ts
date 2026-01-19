@@ -27,11 +27,12 @@ app.post('/send-email', sendEmailLimiter, async (req, res) => {
         to: z.string(),
         subject: z.string().min(1),
         text: z.string().min(1),
+        template: z.string().optional(),
     });
     const validatedData = schema.parse(req.body);
-    const result = await sendEmail(validatedData.to, validatedData.subject, validatedData.text);
+    const result = await sendEmail(validatedData.to, validatedData.subject, validatedData.text, validatedData.template);
     if (result && result.success) {
-        res.status(200).send({ success: true });
+        res.status(200).send({ success: true, messageId: result.messageId, template: validatedData.template });
     } else {
         res.status(500).send({ success: false, error: 'Failed to send email' });
     }

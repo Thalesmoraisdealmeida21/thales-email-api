@@ -32,11 +32,15 @@ jobs:
         run: |
           docker push ${{ secrets.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to Droplet via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
+
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
             docker login registry.digitalocean.com \
